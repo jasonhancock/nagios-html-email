@@ -5,8 +5,8 @@ A script to send html email notifications from Nagios.
 
 ![example-notification](https://github.com/jasonhancock/nagios-html-email/raw/master/example-images/example-notification.png)
 
-License
--------
+License: MIT
+------------
 Copyright (c) 2012 Jason Hancock <jsnbyh@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
