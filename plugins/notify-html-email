@@ -29,7 +29,7 @@ use warnings;
 use MIME::Lite;
 use URI::Escape;
 
-my $nagios_url = $ARGV[0] || die('You must pass the url to your nagios installation as the first argument'); 
+my $nagios_url = $ARGV[0] || die('You must pass the url to your nagios installation as the first argument');
 
 my $color_red    = '#FF8080';
 my $color_green  = '#80FF80';
@@ -67,7 +67,7 @@ my $style_td_even = '"background-color: #c9c9c9;"';
 my $style_td_odd  = '"background-color: #eaeaea;"';
 my $style_table   = "\"font-family: $font; font-size: 12px;\"";
 
-my $style_state = sprintf('"background-color: %s"', 
+my $style_state = sprintf('"background-color: %s"',
     $type eq 'service'
     ? $colors{$ENV{NAGIOS_SERVICESTATE}}
     : $colors{$ENV{NAGIOS_HOSTSTATE}}
@@ -97,12 +97,12 @@ if($type eq 'service') {
     $notification_title = 'Nagios Service Notification';
 
     @rows = (
-        { 
+        {
             'title' => 'Service State:',
             'data'  => $ENV{NAGIOS_SERVICESTATE},
             'style' => $style_state,
         },
-        { 
+        {
             'title' => 'Notification Type:',
             'data'  => $ENV{NAGIOS_NOTIFICATIONTYPE},
         },
