@@ -37,6 +37,8 @@ Nagios' plugins directory (this is usually /usr/lib64/nagios/plugins on a
 Nagios Configuration
 --------------------
 
+This plugin relies on `enable_environment_macros` being set to 1 in your Nagios configuration.
+
 Create the command object:
 
 ```
