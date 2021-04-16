@@ -31,26 +31,6 @@ use URI::Escape;
 
 my $nagios_url = $ARGV[0] || die('You must pass the url to your nagios installation as the first argument');
 
-my $color_red    = '#FF8080';
-my $color_green  = '#80FF80';
-my $color_yellow = '#FFFF80';
-my $color_orange = '#FF9900';
-my $color_even   = '#C9C9C9';
-my $color_odd    = '#EAEAEA';
-
-my %colors=(
-    'PROBLEM'         => $color_red,
-    'RECOVERY'        => $color_green,
-    'ACKNOWLEDGEMENT' => $color_yellow,
-    'CRITICAL'        => $color_red,
-    'WARNING'         => $color_yellow,
-    'OK'              => $color_green,
-    'UNKNOWN'         => $color_orange,
-    'UP'              => $color_green,
-    'DOWN'            => $color_red,
-    'UNREACHABLE'     => $color_orange,
-);
-
 my %allowed_types = (
     'PROBLEM'         => 1,
     'RECOVERY'        => 1,
@@ -59,19 +39,6 @@ my %allowed_types = (
 
 exit if !defined($allowed_types{$ENV{NAGIOS_NOTIFICATIONTYPE}});
 my $type = $ENV{NAGIOS_SERVICEATTEMPT} ? 'service' : 'host';
-
-my $font = 'helvetica, arial';
-my $style_th_even = '"background-color: #c9c9c9; font-weight: bold; width: 130px;"';
-my $style_th_odd  = '"background-color: #eaeaea; font-weight: bold; width: 130px;"';
-my $style_td_even = '"background-color: #c9c9c9;"';
-my $style_td_odd  = '"background-color: #eaeaea;"';
-my $style_table   = "\"font-family: $font; font-size: 12px;\"";
-
-my $style_state = sprintf('"background-color: %s"',
-    $type eq 'service'
-    ? $colors{$ENV{NAGIOS_SERVICESTATE}}
-    : $colors{$ENV{NAGIOS_HOSTSTATE}}
-);
 
 my $subject = sprintf('** %s %s Alert: %s is %s **',
     $ENV{NAGIOS_NOTIFICATIONTYPE},
@@ -100,7 +67,7 @@ if($type eq 'service') {
         {
             'title' => 'Service State:',
             'data'  => $ENV{NAGIOS_SERVICESTATE},
-            'style' => $style_state,
+            'class' => lc($ENV{NAGIOS_SERVICESTATE}),
         },
         {
             'title' => 'Notification Type:',
@@ -138,7 +105,7 @@ if($type eq 'service') {
         {
             'title' => 'Host State:',
             'data'  => $ENV{NAGIOS_HOSTSTATE},
-            'style' => $style_state,
+            'class' => lc($ENV{NAGIOS_HOSTSTATE}),
         },
         {
             'title' => 'Notification Type:',
@@ -183,21 +150,103 @@ if($ENV{NAGIOS_NOTIFICATIONTYPE} eq 'ACKNOWLEDGEMENT') {
 }
 
 # Begin the email
-my $body = "
+my $font = 'helvetica, arial';
+
+my %colors= (
+    red    => '#FF8080',
+    green  => '#80FF80',
+    yellow => '#FFFF80',
+    orange => '#FF9900',
+    even   => '#C9C9C9',
+    odd    => '#EAEAEA',
+);
+
+my $body = <<"EOF";
+<head>
+    <style>
+h3 {
+    font-family: $font;
+    color: black;
+}
+table {
+    font-family: $font;
+    font-size: 12px;
+    border: 0;
+    cellpadding: 4;
+    cellspacing: 2;
+}
+th.odd {
+    background-color: $colors{odd};
+    font-weight: bold;
+    width: 130px;
+}
+th.even {
+    background-color: $colors{even};
+    font-weight: bold;
+    width: 130px;
+}
+td.odd {
+    background-color: $colors{odd};
+}
+td.even {
+    background-color: $colors{even};
+}
+td.problem {
+    background-color: $colors{red};
+}
+td.recovery {
+    background-color: $colors{green};
+}
+td.acknowledgement {
+    background-color: $colors{yellow};
+}
+td.critical {
+    background-color: $colors{red};
+}
+td.warning {
+    background-color: $colors{yellow};
+}
+td.ok {
+    background-color: $colors{green};
+}
+td.unknown {
+    background-color: $colors{orange};
+}
+td.up {
+    background-color: $colors{green};
+}
+td.down {
+    background-color: $colors{red};
+}
+td.unreachable {
+    background-color: $colors{orange};
+}
+    </style>
+</head>
 <body>
-<h3 style=\"font-family: $font; color: black\">$notification_title</h3>
-<table border=\"0\" cellpadding=\"4\" cellspacing=\"2\" style=$style_table>";
+    <h3>$notification_title</h3>
+    <table>
+EOF
 
 # Add the rows to the email
 for(my $i=0; $i<@rows; $i++) {
-    $body .= sprintf('<tr><th style=%s>%s</th><td style=%s>%s</td></tr>',
-        $i % 2 == 0 ? $style_th_even : $style_th_odd,
-        $rows[$i]->{'title'},
-        defined($rows[$i]->{'style'}) ? $rows[$i]->{'style'} : $i % 2 == 0 ? $style_td_even : $style_td_odd,
-        $rows[$i]->{'data'}
-    );
+    my $th_class = $i % 2 ? 'odd' : 'even';
+    my $td_class = $rows[$i]->{'class'} ? $rows[$i]->{'class'} : $th_class;
+    my $title = $rows[$i]->{'title'};
+    my $data = $rows[$i]->{'data'};
+    die $title if !$data;
+    $body .= <<"EOF";
+        <tr>
+            <th class="$th_class">$title</th>
+            <td class="$td_class">$data</td>
+        </tr>
+EOF
 }
-$body .= '</table></body>';
+
+$body .= <<"EOF";
+    </table>
+</body>
+EOF
 
 my $msg = MIME::Lite->new(
     To      => $ENV{NAGIOS_CONTACTEMAIL},
