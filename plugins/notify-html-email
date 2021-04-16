@@ -190,7 +190,7 @@ my $body = "
 
 # Add the rows to the email
 for(my $i=0; $i<@rows; $i++) {
-    $body .= sprintf('<tr><td style=%s>%s</th><td style=%s>%s</td></tr>',
+    $body .= sprintf('<tr><th style=%s>%s</th><td style=%s>%s</td></tr>',
         $i % 2 == 0 ? $style_th_even : $style_th_odd,
         $rows[$i]->{'title'},
         defined($rows[$i]->{'style'}) ? $rows[$i]->{'style'} : $i % 2 == 0 ? $style_td_even : $style_td_odd,
